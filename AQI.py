@@ -34,6 +34,11 @@ from prophet import Prophet
 from prophet.plot import add_changepoints_to_plot
 from sklearn.metrics import mean_absolute_error
 import logging
+
+# Disable prophet logging completely to bypass the bug
+logging.getLogger('prophet').setLevel(logging.ERROR)
+logging.getLogger('cmdstanpy').setLevel(logging.ERROR)
+
 st.set_page_config(layout='wide')
 logging.getLogger('prophet').setLevel(logging.ERROR)
 st.write("Project title: Air Quality Index Analysis and Prediction")
@@ -304,12 +309,19 @@ def get_prophet_models():
   for city in df_list:
     prophet_df=df_list[city].reset_index().rename(columns={'index':'ds','AQI':'y'})
 
-    m=Prophet(
-        changepoint_prior_scale=changepoint_prior_scale_list[city],
-        seasonality_mode=seasonality_mode_list[city],
-        seasonality_prior_scale=seasonality_prior_scale_list[city],
-        holidays_prior_scale=holidays_prior_scale_list[city]
-        )
+    # m=Prophet(
+    #     changepoint_prior_scale=changepoint_prior_scale_list[city],
+    #     seasonality_mode=seasonality_mode_list[city],
+    #     seasonality_prior_scale=seasonality_prior_scale_list[city],
+    #     holidays_prior_scale=holidays_prior_scale_list[city]
+    #     )
+    m = Prophet(
+    stan_backend='CMDSTANPY',  # Force a specific backend
+    changepoint_prior_scale=changepoint_prior_scale_list[city],
+    seasonality_prior_scale=seasonality_prior_scale_list[city],
+    holidays_prior_scale=holidays_prior_scale_list[city]
+    )
+
     # Initialize simple_m as a separate Prophet instance without regressors
     simple_m=Prophet(
         changepoint_prior_scale=changepoint_prior_scale_list[city],
